@@ -46,7 +46,7 @@ outpatient AS (
     GROUP_CONCAT(
       DISTINCT `就诊ID号`
       ORDER BY `就诊ID号`
-      SEPARATOR ','
+      SEPARATOR ','             
       ) AS visit_id
   FROM `门诊信息-pcos筛选（未排除？）`
   WHERE `身份证号` IS NOT NULL

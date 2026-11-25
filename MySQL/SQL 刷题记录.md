@@ -12,13 +12,23 @@ WHERE hire_date = (
 
 ```sql
 -- SQL201
-SELECT emp_no, birth_date, first_name, last_name, gender, hire_date
+SELECT
+	emp_no,
+	birth_date,
+	first_name,
+	last_name,
+	gender,
+	hire_date
 FROM (
-    SELECT *, DENSE_RANK()OVER(ORDER BY hire_date desc) hire_rk
+    SELECT 
+	    *,
+	    DENSE_RANK()OVER(ORDER BY hire_date desc) hire_rk
     FROM employees
 ) AS rk
-WHERE rk.hire_rk = 3
-ORDER BY emp_no asc
+WHERE
+	rk.hire_rk = 3
+ORDER BY
+	emp_no asc
 ```
 
 ```sql
@@ -79,4 +89,179 @@ FROM dept_emp d JOIN salaries s ON d.emp_no = s.emp_no
 ) r
 WHERE r.s = 1
 ORDER BY dept_no asc
+```
+
+```sql
+-- SQL214
+SELECT *
+FROM employees
+WHERE emp_no % 2 = 1 -- SQL中的等于运算符就是'='而非'=='
+    AND last_name != 'Mary'
+ORDER BY hire_date DESC
+```
+
+```sql
+-- SQL215
+SELECT title, avg(s.salary)
+FROM titles t JOIN salaries s ON t.emp_no = s.emp_no
+GROUP BY title
+ORDER BY avg(s.salary) ASC
+```
+
+```SQL
+--SQL216
+SELECT emp_no, salary
+FROM (
+    SELECT emp_no, salary,
+        RANK()OVER(ORDER BY salary DESC) posn
+    FROM salaries
+) rk
+WHERE rk.posn = 2
+ORDER BY emp_no ASC
+```
+
+```SQL
+-- SQL217
+SELECT
+    e.emp_no,
+    salary,
+    last_name,
+    first_name
+FROM
+    employees e 
+    JOIN
+    salaries s
+    ON e.emp_no = s.emp_no
+WHERE
+    s.salary = (
+        SELECT
+            MAX(salary)
+        FROM
+            salaries
+        WHERE
+        salary != (
+            SELECT
+                MAX(salary)
+            FROM
+                salaries
+        )
+    )
+    
+-- 错误提交
+SELECT
+    e.emp_no,
+    salary,
+    last_name,
+    forst_name
+FROM
+    (
+    SELECT
+        e.emp_no,
+        salary,
+        last_name,
+        forst_name
+    FROM
+        employees e 
+        JOIN
+        salaries s
+        ON e.emp_no = s.emp_no
+    WHERE salary < MAX(salary)
+    ) a
+WHERE salary = MAX(salary)
+-- 不能在WHERE语句中直接使用聚合函数，可以使用子查询嵌套聚合函数
+```
+
+```SQL
+-- SQL218
+SELECT
+    last_name,
+    first_name,
+    dept_name
+FROM (
+    SELECT
+        first_name,
+        last_name,
+        dept_no
+    FROM
+        employees e LEFT JOIN
+        dept_emp d ON
+        e.emp_no = d.emp_no
+) no LEFT JOIN
+    departments de ON
+    no.dept_no = de.dept_no
+```
+
+```sql
+-- SQL220
+WITH
+    A AS (
+        -- 获取入职时的薪水
+        SELECT
+            e.emp_no,
+            salary
+        FROM
+            employees e
+            JOIN salaries s ON e.emp_no = s.emp_no
+        WHERE
+            hire_date = from_date
+    ),
+    B AS (
+        -- 获取现在的薪水
+        SELECT
+            emp_no,
+            salary
+        FROM
+            salaries
+        WHERE
+            to_date = '9999-01-01'
+    )
+    -- 计算涨薪
+SELECT
+    A.emp_no,
+    B.salary - A.salary growth
+FROM
+    A
+    JOIN B ON A.emp_no = B.emp_no
+ORDER BY
+    growth asc
+
+-- 学会划分任务步骤
+```
+
+```sql
+-- SQL221
+SELECT
+    A.dept_no,
+    d.dept_name,
+    A.sum
+FROM
+    (
+        SELECT
+            de.dept_no,
+            COUNT(salary) sum
+        FROM
+            dept_emp de
+            JOIN salaries s ON de.emp_no = s.emp_no
+        GROUP BY
+            de.dept_no
+    ) A
+    JOIN departments d ON A.dept_no = d.dept_no
+ORDER BY
+    dept_no ASC
+```
+
+```SQL
+-- SQL222
+SELECT
+    emp_no,
+    salary,
+    DENSE_RANK() OVER (
+        ORDER BY
+            salary DESC
+    ) t_rank
+FROM
+    salaries
+ORDER BY
+    t_rank ASC,
+    emp_no ASC
 ```
